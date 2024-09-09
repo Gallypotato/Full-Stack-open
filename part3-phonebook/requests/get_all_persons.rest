@@ -1,0 +1,17 @@
+### get whole phonebook
+GET http://localhost:3001/api/persons
+### get phonebook info
+POST http://localhost:3001/info
+### get one person info
+GET http://localhost:3001/api/persons/1
+### delete entry
+DELETE http://localhost:3001/api/persons/7
+###
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name":"jamie",
+    "number":11111
+}
+
