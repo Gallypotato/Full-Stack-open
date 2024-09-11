@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
 const PORT = process.env.PORT || 3001
 const cors = require('cors')
+const Person  = require('./models/person')
 
 app.use(cors())
 app.use(express.static('build'))
@@ -41,7 +43,9 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 //3.1
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({}).then(persons => {
+    response.json(persons)
+  })
 })
 
 
@@ -108,17 +112,15 @@ app.post('/api/persons',(request, response) =>{
         });
       }
     
-    const person = {
+    const person = new Person({
         name: body.name,
         number: body.number || false,
-        id: generateId(),
-    }
+        
+    }) 
 
-    console.log(person.id)
-    
-    persons = persons.concat(person)
-    
-    response.json(person)
+    person.save().then(savedPerson => {
+      response.json(savedPerson)
+    })
 })
 
 
