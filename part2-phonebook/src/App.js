@@ -4,7 +4,7 @@ import Persons from './components/Person'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Notification from './components/Notification'
-
+import './index.css'; 
 
 
 const App = () => {
@@ -61,7 +61,17 @@ const App = () => {
         
         setPersons(persons.concat(returnedPersons))
         setNewName('')
-        setNewNum('xxx-xxx-xxxx')
+        setNewNum('xxx-xxxxx')
+      })
+      .catch(error => {
+        setNotificationMessage({
+          "text": error.response.data.error,  // error from backend
+          "type": "error"
+        });
+
+        setTimeout(() => {
+          setNotificationMessage(null);
+        }, 5000);
       })
     } 
     else if(found) {
@@ -70,7 +80,7 @@ const App = () => {
         .update(found.id, nameObject)
         .then(returnedPersons => {
           setNotificationMessage({
-            "text": `Updated ${ returnedPersons.name }`,
+            "text": `Updated really ${ returnedPersons.name }`,
             "type": "notification"
           })  
           
@@ -82,6 +92,7 @@ const App = () => {
           }, 5000)
           setPersons(persons.map(p => p.id !== found.id ? p : returnedPersons))
         })
+        
       }
     }
   }
@@ -102,10 +113,11 @@ const App = () => {
   }
   
   const handleDeletion = (event) => {
-    const id = Number(event.target.id)
+    
+    const id = event.target.id
 
     const name = event.target.name
-    const msg = `Do you really want to delete ${ name }?`
+    const msg = `Do you really want to deleteeeee ${ name }?`
   
     if(window.confirm(msg) === true){
       personsService
