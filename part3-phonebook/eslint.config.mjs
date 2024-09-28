@@ -3,10 +3,10 @@ import pluginJs from '@eslint/js'
 import stylisticJs from '@stylistic/eslint-plugin-js'
 
 export default [
-  {files: ['**/*.js'], languageOptions: {sourceType: 'commonjs'}},
-  {languageOptions: { globals: globals.node }},
+  { files: ['**/*.js'], languageOptions: { sourceType: 'commonjs' } },
+  { languageOptions: { globals: globals.node } },
   pluginJs.configs.recommended,
-  {plugins: {
+  { plugins: {
     '@stylistic/js': stylisticJs
   },
   rules: {

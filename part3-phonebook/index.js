@@ -34,24 +34,24 @@ const errorHandler = (error, request, response, next) => {
 app.use(cors())
 app.use(express.static('build'))
 //let persons = [
-//    { 
+//    {
 //        id: 1,
-//        name: "Arto Hellas", 
+//        name: "Arto Hellas",
 //        number: "040-123456"
 //      },
-//      { 
+//      {
 //        id: 2,
-//        name: "Ada Lovelace", 
+//        name: "Ada Lovelace",
 //        number: "39-44-5323523"
 //      },
-//      { 
+//      {
 //        id: 3,
-//        name: "Dan Abramov", 
+//        name: "Dan Abramov",
 //        number: "12-43-234345"
 //      },
-//      { 
+//      {
 //        id: 4,
-//        name: "Mary Poppendieck", 
+//        name: "Mary Poppendieck",
 //        number: "39-23-6423122"
 //      }
 //]
@@ -99,10 +99,10 @@ app.get('/api/persons/:id', (request, response, next) => {
       console.log('x')
       response.status(404).end()
     }
-  })    
+  })
     .catch(error => next(error))
 })
-  
+
 
 //3.4
 //app.delete('/api/persons/:id', (request, response) => {
@@ -126,16 +126,16 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 
 //3.6
-app.post('/api/persons',(request, response, next) =>{
+app.post('/api/persons',(request, response, next) => {
   const body = request.body
   if (!body.name) {
-    return response.status(400).json({ 
-      error: 'name is missing' 
+    return response.status(400).json({
+      error: 'name is missing'
     })
   }
   if (!body.number) {
-    return response.status(400).json({ 
-      error: 'number is missing' 
+    return response.status(400).json({
+      error: 'number is missing'
     })
   }
   Person.findOne({ name: body.name })
@@ -143,11 +143,11 @@ app.post('/api/persons',(request, response, next) =>{
       if (existingPerson) {
         return response.status(400).json({ error: 'name must be unique' })
       }
-    
+
       const person = new Person({
         name: body.name,
         number: body.number || false,
-      }) 
+      })
 
       return person.save()
     })

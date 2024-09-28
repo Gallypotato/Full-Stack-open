@@ -36,7 +36,7 @@ const Person = mongoose.model('Person', phonebookSchema)
 
 Person
   .find({})
-  .then(result=> {
+  .then(result => {
     result.forEach(
       person => {
         console.log(person)
