@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config()
 const mongoose = require('mongoose')
 
 mongoose.set('strictQuery', false)
@@ -11,7 +11,7 @@ console.log('connecting to', url)
 
 mongoose.connect(url)
 
-  .then(result => {
+  .then(() => {
     console.log('connected to MongoDB')
   })
   .catch(error => {
@@ -30,7 +30,7 @@ const phonebookSchema = new mongoose.Schema({
     minLength: 8,
     validate: {
       validator: function(v) {
-        return /\d{2,3}-\d{5,}$/.test(v);
+        return /\d{2,3}-\d{5,}$/.test(v)
       },
       message: props => `${props.value} is not a valid phone number!`
     },
@@ -40,12 +40,12 @@ const phonebookSchema = new mongoose.Schema({
 
 
 phonebookSchema.set('toJSON', {
-    transform: (document, returnedObject) => {
-      returnedObject.id = returnedObject._id.toString()
-      delete returnedObject._id
-      delete returnedObject.__v
-    }
-  })
+  transform: (document, returnedObject) => {
+    returnedObject.id = returnedObject._id.toString()
+    delete returnedObject._id
+    delete returnedObject.__v
+  }
+})
   
   
 module.exports = mongoose.model('Person', phonebookSchema)

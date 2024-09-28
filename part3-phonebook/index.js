@@ -1,11 +1,11 @@
-require('dotenv').config();
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
 const PORT = process.env.PORT || 3001
 const cors = require('cors')
-const Person  = require('./models/person');
-const person = require('./models/person');
+const Person  = require('./models/person')
+
 
 //app.use(express.static('dist'))
 
@@ -66,10 +66,10 @@ const unknownEndpoint = (request, response) => {
 
 //3.8
 morgan.token('body', (req) => {
-    return req.method === 'POST' ? JSON.stringify(req.body) : '';
-  });
+  return req.method === 'POST' ? JSON.stringify(req.body) : ''
+})
 
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 //3.1
 app.get('/api/persons', (request, response) => {
@@ -81,27 +81,27 @@ app.get('/api/persons', (request, response) => {
 
 //3.2
 app.post('/info',(request,response) => {
-    const receivedTime = new Date().toUTCString();
-    const maxId = persons.length > 0
-    ? Math.max(...persons.map(n => n.id))
+  const receivedTime = new Date().toUTCString()
+  const maxId = Person.length > 0
+    ? Math.max(...Person.map(n => n.id))
     : 0
 
-    response.send(
-        `<p>Phonebook has info for ${maxId} people<br/>${receivedTime} </p>`
-    )
+  response.send(
+    `<p>Phonebook has info for ${maxId} people<br/>${receivedTime} </p>`
+  )
 })
 //3.3
-app.get('/api/persons/:id', (request, response) => {
-    Person.findById(request.params.id).then(person => {
-      if (person) {
-        response.json(person)
-      } else {
-        console.log('x')
-        response.status(404).end()
-      }
-    })    
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id).then(person => {
+    if (person) {
+      response.json(person)
+    } else {
+      console.log('x')
+      response.status(404).end()
+    }
+  })    
     .catch(error => next(error))
-  })
+})
   
 
 //3.4
@@ -127,41 +127,41 @@ app.get('/api/persons/:id', (request, response) => {
 
 //3.6
 app.post('/api/persons',(request, response, next) =>{
-    const body = request.body
-    if (!body.name) {
-        return response.status(400).json({ 
-          error: 'name is missing' 
-        })
-      }
-    if (!body.number) {
-        return response.status(400).json({ 
-          error: 'number is missing' 
-        })
-      }
-    Person.findOne({ name: body.name })
+  const body = request.body
+  if (!body.name) {
+    return response.status(400).json({ 
+      error: 'name is missing' 
+    })
+  }
+  if (!body.number) {
+    return response.status(400).json({ 
+      error: 'number is missing' 
+    })
+  }
+  Person.findOne({ name: body.name })
     .then(existingPerson => {
       if (existingPerson) {
-        return response.status(400).json({ error: 'name must be unique' });
+        return response.status(400).json({ error: 'name must be unique' })
       }
     
-    const person = new Person({
+      const person = new Person({
         name: body.name,
         number: body.number || false,
-        }) ;
+      }) 
 
-    return person.save();
+      return person.save()
     })
     .then(savedPerson => {
       response.json(savedPerson)
     })
-    .catch(error => next(error));
+    .catch(error => next(error))
 })
 
 //3.15
 app.delete('/api/persons/:id', (request, response, next) => {
-  console.log('Deleting person with id:', request.params.id);
+  console.log('Deleting person with id:', request.params.id)
   Person.findByIdAndDelete(request.params.id)
-    .then(result => {
+    .then(() => {
       response.status(204).end()
     })
     .catch(error => next(error))
