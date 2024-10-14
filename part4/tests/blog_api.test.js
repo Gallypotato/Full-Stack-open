@@ -10,11 +10,40 @@ const api = supertest(app)
 const helper = require('./test_helper')
 // add blogs in test datebase
 describe('when there is initially some blogs saved', () =>{
+  let token
+  let userId
+
   beforeEach(async () => {
     await Blog.deleteMany({})
+    await User.deleteMany({})
+
+    //create a test user
+    const user = {
+      username: 'testuser', // Test user credentials
+      password: 'password123'
+    };
+
+    const userCreation =await api
+      .post('/api/users').send(user);
+    
+    userId = userCreation.body.id
+
+    // Authenticate the test user to get the token
+    const response = await api
+      .post('/api/login') // Login endpoint to receive a token
+      .send(user);
+
+    
+    token = response.body.token
+    
+
+    // Create initial blogs for testing
     const blogObjects = helper.initialBlogs
-      .map(blog => new Blog(blog))
-    const promiseArray = blogObjects.map(blog => blog.save())
+      .map(blog => {
+        return { ...blog, user: response.body.id}
+      })
+
+    const promiseArray = blogObjects.map(blog => new Blog(blog).save())
     await Promise.all(promiseArray) //wait for all of the asynchronous operations to finish executing with the Promise.all method
   })
 
@@ -23,6 +52,7 @@ describe('when there is initially some blogs saved', () =>{
   test('blogs list are returned as JSON', async () => {
     await api
       .get('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect('Content-Type', /application\/json/)
   })
@@ -32,6 +62,7 @@ describe('when there is initially some blogs saved', () =>{
   test('identifier property is id', async () => {
     const response = await api
       .get('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
     const firstBlogPost = response.body[0]
     assert.ok(firstBlogPost.id !== undefined); // 确认 'id' 是定义的
     assert.ok(firstBlogPost._id === undefined); // 确认 '_id' 是未定义的
@@ -48,9 +79,10 @@ describe('when there is initially some blogs saved', () =>{
         url: "https://reactpatterns.com/",
         likes: 8,
       }
-    
+     
       await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -61,7 +93,25 @@ describe('when there is initially some blogs saved', () =>{
       const title = blogsAtEnd.map(r => r.title)
       assert(title.includes('4.10 verify http post'))
         })
-  
+    // 4.23   verifies that no token to create a new blog can be resulted in 401
+    test('a valid blog can not be added to db without token', async () => {
+      const newBlog = {
+        title: "4.23 verify http post",
+        author: "Chan",
+        url: "https://reactpatterns.com/",
+        likes: 8,
+      }
+     
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(401)
+        .expect('Content-Type', /application\/json/)
+      
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+      
+        })
     // 4.11 Write a test that verifies that if the likes property is missing from the request
     //  it will default to the value 0. 
     test('default empty like property to value 0', async () => {
@@ -73,6 +123,7 @@ describe('when there is initially some blogs saved', () =>{
       
       await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -94,6 +145,7 @@ describe('when there is initially some blogs saved', () =>{
         const response = 
           await api
           .post('/api/blogs')
+          .set('Authorization', `Bearer ${token}`)
           .send(newBlog)
           .expect(400)
           .expect('Content-Type', /application\/json/)  
@@ -109,6 +161,7 @@ describe('when there is initially some blogs saved', () =>{
         const response = 
           await api
           .post('/api/blogs')
+          .set('Authorization', `Bearer ${token}`)
           .send(newBlog)
           .expect(400)
           .expect('Content-Type', /application\/json/)  
@@ -120,16 +173,58 @@ describe('when there is initially some blogs saved', () =>{
 
   describe('deletion of a blog', () => {
     test('deleting a single blog post resource', async () => {
-      const blogsAtStart = await helper.blogsInDb()
-      const blogToDelete = blogsAtStart[0]
-      
+      // add new blog
+      const newBlog = {
+        title: "4.10 verify http post",
+        author: "Chan",
+        url: "https://reactpatterns.com/",
+        likes: 8,
+        user: userId // connect user to blog
+      }
+     
+      const blogToDelete = await api
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
       await api
-        .delete(`/api/blogs/${blogToDelete.id}`)
+        .delete(`/api/blogs/${blogToDelete.body.id}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(204)
       
       const blogsAtEnd = await helper.blogsInDb()
 
-      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length-1)
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+
+      const titles = blogsAtEnd.map(r => r.title)
+      assert(!titles.includes(blogToDelete.title))
+    })
+    test('deleting a single blog post resource without token', async () => {
+      // add new blog
+      const newBlog = {
+        title: "4.10 verify http post",
+        author: "Chan",
+        url: "https://reactpatterns.com/",
+        likes: 8,
+        user: userId // connect user to blog
+      }
+     
+      const blogToDelete = await api
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
+      await api
+        .delete(`/api/blogs/${blogToDelete.body.id}`)
+        .expect(401)
+      
+      const blogsAtEnd = await helper.blogsInDb()
+
+      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
 
       const titles = blogsAtEnd.map(r => r.title)
       assert(!titles.includes(blogToDelete.title))
@@ -138,28 +233,80 @@ describe('when there is initially some blogs saved', () =>{
 
   describe('update a blog', () => {
     test('update a single blog post', async () => {
-      const blogsAtStart = await helper.blogsInDb()
-      const blogToUpdate = blogsAtStart[0]
-      
+      // add new blog
+      const newBlog = {
+        title: "4.10 verify http post",
+        author: "Chan",
+        url: "https://reactpatterns.com/",
+        likes: 8,
+        user: userId // connect user to blog
+      }
+     
+      const blogToUpdate = await api
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
 
       const updatedBlog = {
-        title: blogToUpdate.title,
-        author: blogToUpdate.author, // Keeping the original author
-        url: blogToUpdate.url,       // Keeping the original URL
-        likes: blogToUpdate.likes + 1 // Incrementing the number of likes
+        title: blogToUpdate.body.title,
+        author: blogToUpdate.body.author, // Keeping the original author
+        url: blogToUpdate.body.url,       // Keeping the original URL
+        likes: blogToUpdate.body.likes + 1 // Incrementing the number of likes
       };
 
       
-
       await api
-        .put(`/api/blogs/${blogToUpdate.id}`)
+        .put(`/api/blogs/${blogToUpdate.body.id}`)
+        .set('Authorization', `Bearer ${token}`)
         .send(updatedBlog)
         .expect(200)
-
+      
+      
       const blogsAtEnd = await helper.blogsInDb()
 
-      const updatedBlogFromDb = blogsAtEnd.find(blog => blog.id === blogToUpdate.id)
+      const updatedBlogFromDb = blogsAtEnd.find(blog => blog.id === blogToUpdate.body.id)
+      console.log("end", updatedBlogFromDb)
       assert.strictEqual(updatedBlog.likes, updatedBlogFromDb.likes)
+    })
+
+    test('update a single blog post without token', async () => {
+      // add new blog
+      const newBlog = {
+        title: "4.10 verify http post",
+        author: "Chan",
+        url: "https://reactpatterns.com/",
+        likes: 8,
+        user: userId // connect user to blog
+      }
+     
+      const blogToUpdate = await api
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
+      const updatedBlog = {
+        title: blogToUpdate.body.title,
+        author: blogToUpdate.body.author, // Keeping the original author
+        url: blogToUpdate.body.url,       // Keeping the original URL
+        likes: blogToUpdate.body.likes + 1 // Incrementing the number of likes
+      };
+
+      
+      await api
+        .put(`/api/blogs/${blogToUpdate.body.id}`)
+        .send(updatedBlog)
+        .expect(401)
+      
+      
+      const blogsAtEnd = await helper.blogsInDb()
+
+      const updatedBlogFromDb = blogsAtEnd.find(blog => blog.id === blogToUpdate.body.id)
+      console.log("end", updatedBlogFromDb)
+      assert.strictEqual(updatedBlog.likes - 1, updatedBlogFromDb.likes)
     })
   })
 

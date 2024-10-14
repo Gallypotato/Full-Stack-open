@@ -49,15 +49,21 @@ blogsRouter.delete('/:id', userExtractor, async (req, res, next) => {
 
 blogsRouter.put('/:id', async (req, res, next) => {
   const body = req.body
+  const user = req.user
+
+  const oldBlog = await Blog.findById(req.params.id)
   
-  const blog = {
+  if(oldBlog.user.toString() !== user._id.toString()) {
+    return res.status(401).json({ error: 'only the creator can delete this blog' })
+  } 
+  
+  const newBlog = {
     title: body.title,
     author: body.author,
     url: body.url,
     likes: body.likes
   }
-  
-  const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, blog, { new: true })
+  const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, newBlog, { new: true })
   res.status(200).json(updatedBlog)
 })
 
