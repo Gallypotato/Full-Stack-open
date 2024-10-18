@@ -3,14 +3,13 @@ const Note = require('../models/note')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 
-const getTokenFrom = request => {
+const getTokenFrom = (request,response) => {
   const authorization = request.get('authorization')
   if (authorization && authorization.startsWith('Bearer ')) { // Bearer is Authorization header. The header also tells which authentication scheme is used.
     return authorization.replace('Bearer ', '')
   } else {
-    return resizeBy.status(401).json({error: 'Authorization header is missing or invalid '})
+    return response.status(401).json({error: 'Authorization header is missing or invalid '})
   }
-  return null
 }
 
 notesRouter.get('/', async (request, response) => {
@@ -33,7 +32,7 @@ notesRouter.get('/:id', async (request, response, next) => {
 
 notesRouter.post('/', async (request, response, next) => {
   const body = request.body
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
+  const decodedToken = jwt.verify(getTokenFrom(request,response), process.env.SECRET)
   if(!decodedToken.id){ // user not exist
     return response.status(401).json({error:'token invalid, no id'})
   }

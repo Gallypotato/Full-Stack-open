@@ -4,7 +4,7 @@ const baseUrl = '/api/notes'
 let token = null
 
 const setToken = newToken => {
-  token = `bearer ${newToken}`
+  token = `Bearer ${newToken}`
 }
 
 const getAll = () => {
@@ -12,12 +12,12 @@ const getAll = () => {
   return request.then(response => response.data)
 }
 
-const create = newObject => {
+const create = async newObject => {
   const config = {
     headers: { Authorization: token },
   }
 
-  const response = axios.post(baseUrl, newObject, config)
+  const response = await axios.post(baseUrl, newObject, config)
   return response.data
 }
 
