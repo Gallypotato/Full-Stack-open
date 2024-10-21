@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
-import Notification from './components/notification'
+import Notification from './components/Notification'
 import './index.css'
+import AddBlogForm from './components/AddBlogForm'
+import Togglable from './components/Togglable'
 
 const App = () => {
+  const [blogVisible, setBlogVisible] = useState(false)
   const [message, setMessage] = useState(null)
   const [blogs, setBlogs] = useState([])
   const [newBlog, setNewBlog] = useState('')
@@ -17,33 +20,49 @@ const App = () => {
   
   // fetch blogs for logined user
   useEffect(() => {
-    if (user) {
     const fetchBlogs = async () => {
-      try {
-        const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
-        if (loggedUserJSON) {
-            const user = JSON.parse(loggedUserJSON)
-            blogService.setToken(user.token)  
-            const initialBlogs = await blogService.getAll()  
-            setBlogs(initialBlogs)
+      const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser');
+      if (loggedUserJSON) {
+        const user = JSON.parse(loggedUserJSON);
+        if (isTokenExpired(user)) {
+          setMessage('0 Session expired, please log in again.');
+          setTimeout(() => {
+            setMessage(null);
+          }, 5000);
+          handleLogout();
+          return;
         }
-      } catch (error) {
+      blogService.setToken(user.token);
+      try{
+      const initialBlogs = await blogService.getAll()  
+      setBlogs(initialBlogs)
+      }catch (error) {
         console.error('Error fetching blogs:', error)
       }
     }
-    fetchBlogs()
   }
-  }, [user])
-  
+
+      fetchBlogs()
+
+  }, [])
+
   // set token
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
+      if(isTokenExpired(user)){
+        setMessage(' Session expired, please log in again.'); //red //green
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
+        handleLogout(); 
+        return;
+      }
       setUser(user)
-      blogService.setToken(user.token)
-    }
+      blogService.setToken(user.token)}
   }, [])
+  
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -51,15 +70,15 @@ const App = () => {
       const user = await loginService.login({
         username, password,
       })
-
+      const expiryTime = Date.now() + user.expiresIn * 1000;
       window.localStorage.setItem(
-        'loggedBlogappUser', JSON.stringify(user)
+        'loggedBlogappUser', JSON.stringify({ ...user, expiryTime})
       )
       blogService.setToken(user.token)
-      console.log('Logged in user frontend handle login:', user); 
       setUser(user)
       setUsername('')
       setPassword('')
+      setMessage(null)
     } catch (exception) {
       setMessage('Wrong username or password')
       setTimeout(() => {
@@ -68,13 +87,17 @@ const App = () => {
     }
     }
  
-  const handleLogout = async(event) =>{
+  const handleLogout = () =>{
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
     setBlogs([])
-    console.log('Logout successful, user:', user);
-
+    console.log('Logout, user:', user);
   }
+
+  const isTokenExpired = (user) => {
+    return Date.now() > user.expiryTime;
+  }
+  
   const loginForm = () => (
     <form onSubmit={handleLogin}>
         <div>
@@ -105,58 +128,20 @@ const App = () => {
     </div>  
   )
 
-  const addBlog = async (event) => {
-    event.preventDefault()
-    
-    const blogObject = {
-      title: newBlog,
-      author: newBlogAuthor,
-      url: newBlogUrl,
-    }
-    const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON)
-      blogService.setToken(user.token)  
-      
-      try {
-        const returnedBlog = await blogService.create(blogObject); 
-        setBlogs(blogs.concat(returnedBlog)); 
-        setNewBlog(''); 
-        setNewBlogAuthor(''); 
-        setNewBlogUrl(''); 
-        setMessage(`a new blog ${newBlog} by ${newBlogAuthor} added` )
-        setTimeout(() => {
-          setMessage(null);
-        }, 5000);
-      } catch (error) {
-        console.error('Error creating blog:', error);
-      }
-    }
+  const addBlog = async (blogObject) => {
+    addBlogFormRef.current.toggleVisibility()
+    try {
+      const addedBlog = await blogService.create(blogObject)
+      console.log(addedBlog)
+      setBlogs(prevBlogs => [...prevBlogs, addedBlog])
+      setMessage(`a new blog "${addedBlog.title}" by ${addedBlog.author} added`)
+      setTimeout(() => setMessage(null), 5000)   
+    } catch (error) {
+      console.error('Error creating blog:', error)
+    }  
   }
 
-  const blogForm = () => (
-    <form onSubmit={addBlog}>
-      <input
-        type="text"
-        value={newBlog}
-        placeholder="Title"
-        onChange={({ target }) => setNewBlog(target.value)} // 更新标题状态
-      />
-      <input
-        type="text"
-        value={newBlogAuthor}
-        placeholder="Author"
-        onChange={({ target }) => setNewBlogAuthor(target.value)} // 更新作者状态
-      />
-      <input
-        type="text"
-        value={newBlogUrl}
-        placeholder="URL"
-        onChange={({ target }) => setNewBlogUrl(target.value)} // 更新URL状态
-      />
-      <button type="submit">create</button>
-    </form>  
-  )
+  const addBlogFormRef = useRef()
 
   if (user === null) {
     return (
@@ -172,11 +157,14 @@ const App = () => {
     <div>
       <Notification message={message} type="notice"/>
        {logoutForm()}
-       <h2>Create new blog</h2>
-       {blogForm()}
+       <Togglable buttonLabel= 'new blog' ref={addBlogFormRef}>
+         <AddBlogForm createBlog={addBlog}/>  
+        </Togglable>
       <h2>blogs</h2>
-      {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
+      {blogs
+        .sort((a,b)=> (b.likes - a.likes))
+        .map(blog =>
+          <Blog key={blog.id} blog={blog} currentUser={user} setBlogs={setBlogs}/>
       )}
     </div>
   )

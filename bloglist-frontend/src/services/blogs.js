@@ -22,7 +22,7 @@ const getAll = async () => {
 }
 
 
-const create = async newObject => {
+const create = async (newObject) => {
   const config = {
     headers: { Authorization: token },
   }
@@ -31,4 +31,29 @@ const create = async newObject => {
   return response.data
 }
 
-export default { getAll, setToken, create }
+const like = async (id, newObject) => {
+  const config = {
+    headers: { Authorization: token },
+  }
+  try{
+    const request = axios.put(`${baseUrl}/${id}`, newObject, config)
+    return (await request).data
+  } catch (error) {
+    console.error('Error updating likes:', error.response || error)
+    throw error
+  }
+}
+
+const remove = async(id) => {
+  const config = {
+    headers: { Authorization: token },
+  }
+  try{
+    const request = axios.delete(`${baseUrl}/${id}`, config)
+    return (await request).data
+  } catch (error) {
+    console.error('Error removing blogs:', error.response || error)
+    throw error
+  }
+}
+export default { getAll, setToken, create, like, remove }

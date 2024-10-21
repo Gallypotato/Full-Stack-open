@@ -23,6 +23,7 @@ blogsRouter.post('/', userExtractor, async (request, response) => {
   })
 
   const savedBlog = await blog.save()
+  await savedBlog.populate('user', { username: 1, name: 1 }); // 确保 user 字段包含 username
   user.blogs = user.blogs.concat(savedBlog._id)
   await user.save()
 
@@ -46,17 +47,17 @@ blogsRouter.delete('/:id', userExtractor, async (req, res, next) => {
   res.status(204).end()
 })
 
-
+// only update likes which everyone can like one blog
 blogsRouter.put('/:id', async (req, res, next) => {
   const body = req.body
-  const user = req.user
+  //const user = req.user
 
   const oldBlog = await Blog.findById(req.params.id)
-  
+  /*
   if(oldBlog.user.toString() !== user._id.toString()) {
     return res.status(401).json({ error: 'only the creator can delete this blog' })
   } 
-  
+  */
   const newBlog = {
     title: body.title,
     author: body.author,
