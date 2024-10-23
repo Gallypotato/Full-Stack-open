@@ -17,7 +17,7 @@ const getAll = async () => {
     return request.data
   }catch (error){
     console.error('Error fetching blogs (get ALL):', error.response ? error.response.data : error)  // 添加错误处理
-    throw error 
+    throw error
   }
 }
 

@@ -31,6 +31,6 @@ const notesService = {
   create,
   update,
   setToken
-};
+}
 
-export default notesService;
+export default notesService
