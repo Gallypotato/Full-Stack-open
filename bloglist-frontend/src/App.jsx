@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
@@ -45,7 +46,8 @@ const App = () => {
 
     fetchBlogs()
 
-  }, [handleLogout])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // set token
   useEffect(() => {
@@ -62,7 +64,7 @@ const App = () => {
       }
       setUser(user)
       blogService.setToken(user.token)}
-  }, [handleLogout])
+  }, [])
 
 
   const handleLogin = async (event) => {

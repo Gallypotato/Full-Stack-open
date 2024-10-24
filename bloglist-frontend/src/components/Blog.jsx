@@ -45,18 +45,18 @@ const Blog = ({ blog, currentUser, setBlogs }) => {
 
   return(
     <div style={blogStyle}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className= 'blogInfo' style={{ display: 'flex', alignItems: 'center' }}>
         <div>{blog.title} {blog.author} </div>
         <button onClick={toggleVisibility} style={{ marginLeft:'10px' }}>
           {visible ? 'hide' : 'view'}
         </button>
       </div>
       {visible && (
-        <div style={{ marginTop: '10px' }}>
+        <div className='blogDetail' style={{ marginTop: '10px' }}>
           <p>{blog.url}</p>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <p style={{ marginRight: 8 }}>Likes: {blog.likes}</p>
-            {!liked && <button onClick={handleLike}>Like</button>}
+            {/*!liked && */<button onClick={handleLike}>Like</button>}
           </div>
           <p>{blog.user.username}</p>
           {currentUser && blog.user.username === currentUser.username && (
