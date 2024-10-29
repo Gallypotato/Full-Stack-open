@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Blog from './components/Blog'
@@ -34,6 +35,7 @@ const App = () => {
           handleLogout()
           return
         }
+        setUser(user)
         blogService.setToken(user.token)
         try{
           const initialBlogs = await blogService.getAll()
@@ -43,12 +45,10 @@ const App = () => {
         }
       }
     }
-
     fetchBlogs()
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
+  /*
   // set token
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
@@ -65,8 +65,7 @@ const App = () => {
       setUser(user)
       blogService.setToken(user.token)}
   }, [])
-
-
+*/
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
@@ -82,6 +81,9 @@ const App = () => {
       setUsername('')
       setPassword('')
       setMessage(null)
+
+      const initialBlogs = await blogService.getAll()
+      setBlogs(initialBlogs)
     } catch (exception) {
       setMessage('Wrong username or password')
       setTimeout(() => {
@@ -106,6 +108,7 @@ const App = () => {
       <div>
           username:
         <input
+          data-testid='username'
           type="text"
           value={username}
           name="Username"
@@ -115,6 +118,7 @@ const App = () => {
       <div>
           password:
         <input
+          data-testid='password'
           type="password"
           value={password}
           name="Password"

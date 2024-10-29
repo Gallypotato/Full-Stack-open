@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { useState } from 'react'
 import blogService from '../services/blogs'
 const Blog = ({ blog, currentUser, setBlogs }) => {
@@ -46,7 +47,7 @@ const Blog = ({ blog, currentUser, setBlogs }) => {
   return(
     <div style={blogStyle}>
       <div className= 'blogInfo' style={{ display: 'flex', alignItems: 'center' }}>
-        <div>{blog.title} {blog.author} </div>
+        <div className="blog">{blog.title} {blog.author} </div>
         <button onClick={toggleVisibility} style={{ marginLeft:'10px' }}>
           {visible ? 'hide' : 'view'}
         </button>
