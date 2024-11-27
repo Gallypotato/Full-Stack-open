@@ -1,29 +1,25 @@
-import { useState } from 'react'
+import { useState } from "react";
 
 const AddBlogForm = ({ createBlog }) => {
-
-  const [message, setMessage] = useState(null)
-  const [blogs, setBlogs] = useState([])
-  const [newBlog, setNewBlog] = useState('')
-  const [newBlogAuthor, setNewBlogAuthor] = useState('')
-  const [newBlogUrl, setNewBlogUrl] = useState('')
+  const [message, setMessage] = useState(null);
+  const [blogs, setBlogs] = useState([]);
+  const [newBlog, setNewBlog] = useState("");
+  const [newBlogAuthor, setNewBlogAuthor] = useState("");
+  const [newBlogUrl, setNewBlogUrl] = useState("");
 
   const addBlog = async (event) => {
-    event.preventDefault()
-
+    event.preventDefault();
 
     createBlog({
       title: newBlog,
       author: newBlogAuthor,
       url: newBlogUrl,
-    })
+    });
 
-    setNewBlog('')
-    setNewBlogAuthor('')
-    setNewBlogUrl('')
-
-  }
-
+    setNewBlog("");
+    setNewBlogAuthor("");
+    setNewBlogUrl("");
+  };
 
   return (
     <div>
@@ -31,25 +27,25 @@ const AddBlogForm = ({ createBlog }) => {
 
       <form onSubmit={addBlog}>
         <div>
-         Title
+          Title
           <input
-            data-testid='title'
+            data-testid="title"
             value={newBlog}
             onChange={(event) => setNewBlog(event.target.value)}
           />
         </div>
         <div>
-         Author
+          Author
           <input
-            data-testid='author'
+            data-testid="author"
             value={newBlogAuthor}
             onChange={(event) => setNewBlogAuthor(event.target.value)}
           />
         </div>
         <div>
-         URL
+          URL
           <input
-            data-testid='url'
+            data-testid="url"
             value={newBlogUrl}
             onChange={(event) => setNewBlogUrl(event.target.value)}
           />
@@ -57,8 +53,7 @@ const AddBlogForm = ({ createBlog }) => {
         <button type="submit">create</button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default AddBlogForm
-
+export default AddBlogForm;

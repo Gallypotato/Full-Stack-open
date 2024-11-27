@@ -1,58 +1,59 @@
-const jwt = require('jsonwebtoken')
-const blogsRouter = require('express').Router()
-const Blog = require('../models/blog')
-const User = require('../models/user')
-const {userExtractor} = require('../utils/middleware');
+const jwt = require("jsonwebtoken");
+const blogsRouter = require("express").Router();
+const Blog = require("../models/blog");
+const User = require("../models/user");
+const { userExtractor } = require("../utils/middleware");
 
-blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog
-    .find({}).populate('user', { username: 1, name: 1 })
-  response.json(blogs)
-  })
-  
-blogsRouter.post('/', userExtractor, async (request, response) => { 
-  const body = request.body
-  const user = request.user
+blogsRouter.get("/", async (request, response) => {
+  const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
+  response.json(blogs);
+});
+
+blogsRouter.post("/", userExtractor, async (request, response) => {
+  const body = request.body;
+  const user = request.user;
 
   const blog = new Blog({
     title: body.title,
     author: body.author,
-    user: user._id, 
+    user: user._id,
     url: body.url,
-    likes: body.likes
-  })
+    likes: body.likes,
+  });
 
-  const savedBlog = await blog.save()
-  await savedBlog.populate('user', { username: 1, name: 1 }); // 确保 user 字段包含 username
-  user.blogs = user.blogs.concat(savedBlog._id)
-  await user.save()
+  const savedBlog = await blog.save();
+  await savedBlog.populate("user", { username: 1, name: 1 }); // 确保 user 字段包含 username
+  user.blogs = user.blogs.concat(savedBlog._id);
+  await user.save();
 
-  response.status(201).json(savedBlog)
-  })
+  response.status(201).json(savedBlog);
+});
 
-blogsRouter.delete('/:id', userExtractor, async (req, res, next) => {
-  const user = req.user
+blogsRouter.delete("/:id", userExtractor, async (req, res, next) => {
+  const user = req.user;
 
   // get blog by id
-  const blog = await Blog.findById(req.params.id)
+  const blog = await Blog.findById(req.params.id);
   if (!blog) {
-    return res.status(404).json({ error: 'blog not found' })
+    return res.status(404).json({ error: "blog not found" });
   }
   // check if the user match
-  if(blog.user.toString() !== user._id.toString()) {
-    return res.status(401).json({ error: 'only the creator can delete this blog' })
-  } 
+  if (blog.user.toString() !== user._id.toString()) {
+    return res
+      .status(401)
+      .json({ error: "only the creator can delete this blog" });
+  }
 
-  await Blog.findByIdAndDelete(req.params.id)
-  res.status(204).end()
-})
+  await Blog.findByIdAndDelete(req.params.id);
+  res.status(204).end();
+});
 
 // only update likes which everyone can like one blog
-blogsRouter.put('/:id', async (req, res, next) => {
-  const body = req.body
+blogsRouter.put("/:id", async (req, res, next) => {
+  const body = req.body;
   //const user = req.user
 
-  const oldBlog = await Blog.findById(req.params.id)
+  const oldBlog = await Blog.findById(req.params.id);
   /*
   if(oldBlog.user.toString() !== user._id.toString()) {
     return res.status(401).json({ error: 'only the creator can delete this blog' })
@@ -62,11 +63,12 @@ blogsRouter.put('/:id', async (req, res, next) => {
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes
-  }
-  const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, newBlog, { new: true })
-  res.status(200).json(updatedBlog)
-})
+    likes: body.likes,
+  };
+  const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, newBlog, {
+    new: true,
+  });
+  res.status(200).json(updatedBlog);
+});
 
-
-module.exports = blogsRouter
+module.exports = blogsRouter;
