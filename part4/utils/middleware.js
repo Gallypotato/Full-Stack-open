@@ -38,12 +38,16 @@ const errorHandler = (error, request, response, next) => {
 };
 
 const tokenExtractor = async (request, response, next) => {
-  // code that extracts the token
+  if (request.method === 'POST' && request.url.includes('/comments')) {
+    // Skip token extraction for comment route
+    next();
+  } else {
   const authorization = request.get("authorization");
   if (authorization && authorization.startsWith("Bearer ")) {
     request.token = authorization.replace("Bearer ", "");
   }
   next();
+}
 };
 
 const userExtractor = async (request, response, next) => {

@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
-const User = require("../models/user");
+
 const { userExtractor } = require("../utils/middleware");
 
 blogsRouter.get("/", async (request, response) => {
@@ -71,4 +71,29 @@ blogsRouter.put("/:id", async (req, res, next) => {
   res.status(200).json(updatedBlog);
 });
 
+blogsRouter.post("/:id/comments", async(req, res) => {
+  const blogId = req.params.id;
+  const { comment } = req.body;
+
+  
+  if (!comment || comment.trim() === "") {
+    return res.status(400).json({ error: 'Comment cannot be empty' });
+  }
+
+  try {
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    blog.comments.push({ comment, date: new Date() });
+
+    await blog.save();
+
+    res.status(201).json(blog.comments[blog.comments.length - 1]);
+  } catch (error) {
+    res.status(500).json({ error: 'Error adding comment' });
+  }
+})
 module.exports = blogsRouter;

@@ -9,6 +9,10 @@ const blogSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
+  comments: [{
+    comment: { type: String},  
+    date: { type: Date, default: Date.now },    
+  }]
 });
 
 blogSchema.set("toJSON", {

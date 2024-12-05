@@ -57,4 +57,14 @@ const remove = async (id) => {
     throw error;
   }
 };
-export default { getAll, setToken, create, like, remove };
+
+const comment = async (id, comment) => {
+  try{
+    const response = await axios.post(`${baseUrl}/${id}/comments`, { comment });
+    return response.data;
+  }catch (error) {
+    console.error("Error adding comment:", error.response || error);
+    throw error;
+  }
+};
+export default { getAll, setToken, create, like, remove, comment };

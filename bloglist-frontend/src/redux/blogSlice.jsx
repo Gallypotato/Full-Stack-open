@@ -22,6 +22,11 @@ export const removeBlog = createAsyncThunk('blogs/removeBlog', async (id) => {
   return id;  // Return the id of the blog to remove it from the Redux state
 });
 
+export const commentBlog = createAsyncThunk('comments/createComment', async ({ id, comment }) => {
+  const createdComment = await blogService.comment(id, comment);
+  return {id, comment: createdComment};
+});
+
 export const setToken = createAsyncThunk('blogs/setToken', (token) => {
   blogService.setToken(token);  // Setting the token in the blogService
   return token;  // Return token to update state if necessary
@@ -70,7 +75,16 @@ const blogSlice = createSlice({
       .addCase(removeBlog.fulfilled, (state, action) => {
         state.blogs = state.blogs.filter((blog) => blog.id !== action.payload);
       })
-    }
-  });
+
+      .addCase(commentBlog.fulfilled, (state, action) => {
+        const { id, comment } = action.payload;
+        const blogIndex = state.blogs.findIndex((blog) => blog.id === id);
+        if (blogIndex !== -1) {
+          // Add the new comment to the blog's comments array
+          state.blogs[blogIndex].comments.push(comment);
+        }
+      })
+  }
+});
  
-  export default blogSlice.reducer;
+export default blogSlice.reducer;
